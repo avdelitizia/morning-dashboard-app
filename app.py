@@ -362,8 +362,8 @@ def render_summary(prices, news, fed_rate=None):
 
     # Section header
     st.markdown("""
-    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px 12px 0 0;
-                padding:20px 28px 16px;border-bottom:1px solid #30363d;
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+                padding:20px 28px 16px;margin-bottom:16px;
                 font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-size:20px;">⚡</span>
@@ -442,8 +442,8 @@ def render_summary(prices, news, fed_rate=None):
     if other_items:
         bullets = "".join(f"<li>{a['title']}</li>" for a in other_items)
         st.markdown(f"""
-        <div style="background:#161b22;border:1px solid #30363d;border-top:none;
-                    border-radius:0 0 12px 12px;padding:16px 28px 20px;margin-bottom:24px;
+        <div style="margin-top:16px;background:#161b22;border:1px solid #30363d;
+                    border-radius:8px;padding:16px 24px 20px;margin-bottom:24px;
                     font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <div style="color:#6e7681;font-size:11px;font-weight:700;letter-spacing:0.1em;
                       margin-bottom:8px;">ALSO IN THE NEWS</div>
@@ -452,8 +452,6 @@ def render_summary(prices, news, fed_rate=None):
           </ul>
         </div>
         """, unsafe_allow_html=True)
-    else:
-        st.markdown('<div style="background:#161b22;border:1px solid #30363d;border-top:none;border-radius:0 0 12px 12px;height:12px;margin-bottom:24px;"></div>', unsafe_allow_html=True)
 
 
 def render_news(news):
