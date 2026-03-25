@@ -45,7 +45,7 @@ HOLDINGS = ["NVDA", "SOFI"]
 NVDA_COMPS = ["AMD", "INTC", "AVGO", "TSM", "MRVL"]
 SOFI_COMPS = ["HOOD", "LC", "PYPL", "SQ", "NU", "AFRM", "ALLY", "UPST"]
 ALL_TRACKED = HOLDINGS + NVDA_COMPS + SOFI_COMPS
-INDEX_MAP = {"SPY": "S&P 500", "QQQ": "Nasdaq", "DIA": "Dow", "^VIX": "VIX"}
+INDEX_MAP = {"SPY": "S&P 500", "QQQ": "Nasdaq", "^DJI": "DJIA", "^VIX": "VIX"}
 
 AI_KEYWORDS = [
     "nvidia", "data center", "ai capex", "cloud spending", "infrastructure",
@@ -272,7 +272,7 @@ def render_market_snapshot(prices):
         ("SOFI", "SOFI", "#0a84ff", "#fff"),
         ("SPY", "S&P 500", "#30363d", "#c9d1d9"),
         ("QQQ", "Nasdaq", "#30363d", "#c9d1d9"),
-        ("DIA", "Dow Jones", "#30363d", "#c9d1d9"),
+        ("^DJI", "DJIA", "#30363d", "#c9d1d9"),
         ("^VIX", "VIX", "#30363d", "#c9d1d9"),
     ]
     cols = st.columns(6)
@@ -282,7 +282,7 @@ def render_market_snapshot(prices):
         chg = d.get("change_pct", 0)
         chg_color = "#3fb950" if chg >= 0 else "#f85149"
         arrow = "▲" if chg >= 0 else "▼"
-        display_sym = "VIX" if sym == "^VIX" else sym
+        display_sym = "VIX" if sym == "^VIX" else "DJIA" if sym == "^DJI" else sym
         price_str = f"${price:,.2f}" if price else "—"
         with cols[i]:
             st.markdown(f"""
@@ -307,7 +307,7 @@ def render_summary(prices, news):
     sofi_p = prices.get("SOFI", {})
     spy_p  = prices.get("SPY", {})
     qqq_p  = prices.get("QQQ", {})
-    dia_p  = prices.get("DIA", {})
+    dia_p  = prices.get("^DJI", {})
     vix_p  = prices.get("^VIX", {})
 
     nvda_news = [a for a in news if "NVDA" in a["tickers"] or a["primary"] == "NVDA"]
