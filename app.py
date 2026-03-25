@@ -187,13 +187,16 @@ def load_news():
 
     all_news.sort(key=lambda x: x["published"], reverse=True)
 
-    # Deduplicate by URL after merging (keep first occurrence)
-    seen2 = set()
+    # Deduplicate by URL — merge tickers so cross-ticker articles are detected
+    seen2 = {}
     deduped = []
     for a in all_news:
         if a["url"] not in seen2:
-            seen2.add(a["url"])
+            seen2[a["url"]] = len(deduped)
             deduped.append(a)
+        else:
+            idx = seen2[a["url"]]
+            deduped[idx]["tickers"] = list(set(deduped[idx]["tickers"] + a["tickers"]))
     return deduped
 
 
@@ -310,13 +313,19 @@ def render_summary(prices, news):
     dia_p  = prices.get("^DJI", {})
     vix_p  = prices.get("^VIX", {})
 
-    nvda_news = [a for a in news if "NVDA" in a["tickers"] or a["primary"] == "NVDA"]
-    sofi_news = [a for a in news if "SOFI" in a["tickers"] or a["primary"] == "SOFI"]
-    nvda_hl = (nvda_news[0]["title"] if nvda_news else "No recent news")[:130]
-    sofi_hl = (sofi_news[0]["title"] if sofi_news else "No recent news")[:130]
+    HOLDINGS_SET = {"NVDA", "SOFI"}
+    nvda_news = [a for a in news if a["primary"] == "NVDA" and not (HOLDINGS_SET - {"NVDA"}) & set(a["tickers"])]
+    sofi_news = [a for a in news if a["primary"] == "SOFI" and not (HOLDINGS_SET - {"SOFI"}) & set(a["tickers"])]
+    ai_news   = [a for a in news if any(k in a["title"].lower() for k in AI_KEYWORDS)]
 
-    ai_news = [a for a in news if any(k in a["title"].lower() for k in AI_KEYWORDS)]
-    ai_hl = (ai_news[0]["title"] if ai_news else "No recent AI capex news")[:150]
+    def make_bullets(articles, n=3, max_len=100):
+        items = articles[:n] if articles else []
+        if not items:
+            return '<li style="color:#6e7681;">No recent news</li>'
+        return "".join(
+            f'<li style="margin-bottom:5px;">{a["title"][:max_len]}{"…" if len(a["title"]) > max_len else ""}</li>'
+            for a in items
+        )
 
     def chg_span(p):
         chg = p.get("change_pct", 0)
@@ -351,9 +360,9 @@ def render_summary(prices, news):
             ${nvda_p.get("price", 0):,.2f}
           </div>
           {chg_span(nvda_p)}
-          <div style="color:#c9d1d9;font-size:12px;line-height:1.5;margin-top:8px;">
-            {nvda_hl}
-          </div>
+          <ul style="margin:8px 0 0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.6;">
+            {make_bullets(nvda_news)}
+          </ul>
         </div>
         """, unsafe_allow_html=True)
 
@@ -368,9 +377,9 @@ def render_summary(prices, news):
             ${sofi_p.get("price", 0):,.2f}
           </div>
           {chg_span(sofi_p)}
-          <div style="color:#c9d1d9;font-size:12px;line-height:1.5;margin-top:8px;">
-            {sofi_hl}
-          </div>
+          <ul style="margin:8px 0 0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.6;">
+            {make_bullets(sofi_news)}
+          </ul>
         </div>
         """, unsafe_allow_html=True)
 
@@ -410,9 +419,9 @@ def render_summary(prices, news):
                     font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <span style="background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:4px;
                        font-size:11px;font-weight:700;">AI CAPEX</span>
-          <div style="color:#c9d1d9;font-size:12px;line-height:1.5;margin-top:10px;">
-            {ai_hl}
-          </div>
+          <ul style="margin:8px 0 0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.6;">
+            {make_bullets(ai_news)}
+          </ul>
         </div>
         """, unsafe_allow_html=True)
 
