@@ -3,6 +3,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta, timezone
 import time
+import urllib.request
 
 # ── Page Config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -45,12 +46,20 @@ HOLDINGS = ["NVDA", "SOFI"]
 NVDA_COMPS = ["AMD", "INTC", "AVGO", "TSM", "MRVL"]
 SOFI_COMPS = ["HOOD", "LC", "PYPL", "SQ", "NU", "AFRM", "ALLY", "UPST"]
 ALL_TRACKED = HOLDINGS + NVDA_COMPS + SOFI_COMPS
-INDEX_MAP = {"SPY": "S&P 500", "QQQ": "Nasdaq", "^DJI": "DJIA", "^VIX": "VIX"}
+INDEX_MAP = {"SPY": "S&P 500", "QQQ": "Nasdaq", "^DJI": "DJIA", "^VIX": "VIX",
+             "^TNX": "10-Yr", "^IRX": "3-Mo", "DX-Y.NYB": "DXY"}
 
 AI_KEYWORDS = [
     "nvidia", "data center", "ai capex", "cloud spending", "infrastructure",
     "gpu", "compute", "blackwell", "ai investment", "hyperscaler",
     "microsoft azure", "google cloud", "aws", "chip"
+]
+
+MACRO_KEYWORDS = [
+    "federal reserve", "fed rate", "interest rate", "inflation", "cpi", "pce",
+    "treasury yield", "bond yield", "recession", "gdp", "unemployment", "jobs report",
+    "fomc", "jerome powell", "rate cut", "rate hike", "monetary policy", "tariff",
+    "trade war", "economy", "economic outlook", "consumer spending", "retail sales"
 ]
 
 # ── Badge Helpers ─────────────────────────────────────────────────────────────
@@ -126,6 +135,19 @@ def load_prices():
         except Exception:
             pass
     return data
+
+
+@st.cache_data(ttl=3600)
+def load_fed_rate():
+    try:
+        url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS"
+        with urllib.request.urlopen(url, timeout=5) as resp:
+            text = resp.read().decode()
+        lines = [l for l in text.strip().split('\n') if l and not l.startswith('DATE')]
+        last = lines[-1].split(',')
+        return float(last[1]) if len(last) >= 2 else None
+    except Exception:
+        return None
 
 
 @st.cache_data(ttl=600)
@@ -305,7 +327,7 @@ def render_market_snapshot(prices):
             """, unsafe_allow_html=True)
 
 
-def render_summary(prices, news):
+def render_summary(prices, news, fed_rate=None):
     nvda_p = prices.get("NVDA", {})
     sofi_p = prices.get("SOFI", {})
     spy_p  = prices.get("SPY", {})
@@ -314,9 +336,14 @@ def render_summary(prices, news):
     vix_p  = prices.get("^VIX", {})
 
     HOLDINGS_SET = {"NVDA", "SOFI"}
-    nvda_news = [a for a in news if a["primary"] == "NVDA" and not (HOLDINGS_SET - {"NVDA"}) & set(a["tickers"])]
-    sofi_news = [a for a in news if a["primary"] == "SOFI" and not (HOLDINGS_SET - {"SOFI"}) & set(a["tickers"])]
-    ai_news   = [a for a in news if any(k in a["title"].lower() for k in AI_KEYWORDS)]
+    nvda_news  = [a for a in news if a["primary"] == "NVDA" and not (HOLDINGS_SET - {"NVDA"}) & set(a["tickers"])]
+    sofi_news  = [a for a in news if a["primary"] == "SOFI" and not (HOLDINGS_SET - {"SOFI"}) & set(a["tickers"])]
+    ai_news    = [a for a in news if any(k in a["title"].lower() for k in AI_KEYWORDS)]
+    macro_news = [a for a in news if any(k in a["title"].lower() for k in MACRO_KEYWORDS)]
+
+    tnx_val = prices.get("^TNX", {}).get("price")   # 10-yr yield
+    irx_val = prices.get("^IRX", {}).get("price")   # 3-mo yield
+    dxy_val = prices.get("DX-Y.NYB", {}).get("price")  # US dollar index
 
     def make_bullets(articles, n=3, max_len=100):
         items = articles[:n] if articles else []
@@ -384,30 +411,27 @@ def render_summary(prices, news):
         """, unsafe_allow_html=True)
 
     with col3:
-        spy_chg  = spy_p.get("change_pct", 0)
-        qqq_chg  = qqq_p.get("change_pct", 0)
-        dia_chg  = dia_p.get("change_pct", 0)
-        vix_val  = vix_p.get("price", 0)
-        def row(label, chg):
-            c = "#3fb950" if chg >= 0 else "#f85149"
-            a = "▲" if chg >= 0 else "▼"
-            return (f'<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'
-                    f'<span style="color:#6e7681;">{label}</span>'
-                    f'<span style="color:{c};font-weight:600;">{a} {abs(chg):.2f}%</span></div>')
+        def rate_cell(label, val, suffix=""):
+            val_str = f"{val:.2f}{suffix}" if val is not None else "—"
+            return (f'<div style="display:flex;justify-content:space-between;padding:2px 0;">'
+                    f'<span style="color:#6e7681;font-size:11px;">{label}</span>'
+                    f'<span style="color:#e6edf3;font-weight:600;font-size:11px;">{val_str}</span></div>')
         st.markdown(f"""
         <div style="background:#161b22;border:1px solid #30363d;
-                    padding:14px;min-height:130px;
+                    padding:14px;
                     font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <span style="background:#6e7681;color:#fff;padding:2px 8px;border-radius:4px;
                        font-size:11px;font-weight:700;">MACRO</span>
-          <div style="margin-top:12px;font-size:13px;">
-            {row("S&amp;P 500", spy_chg)}
-            {row("Nasdaq", qqq_chg)}
-            {row("Dow Jones", dia_chg)}
-            <div style="display:flex;justify-content:space-between;margin-top:2px;">
-              <span style="color:#6e7681;">VIX</span>
-              <span style="color:#e6edf3;font-weight:600;">{vix_val:.2f}</span>
-            </div>
+          <div style="margin-top:10px;">
+            {rate_cell("Fed Rate", fed_rate, "%")}
+            {rate_cell("10-Yr Yield", tnx_val, "%")}
+            {rate_cell("3-Mo Yield", irx_val, "%")}
+            {rate_cell("US Dollar (DXY)", dxy_val)}
+          </div>
+          <div style="border-top:1px solid #21262d;margin-top:8px;padding-top:6px;">
+            <ul style="margin:0;padding-left:14px;color:#c9d1d9;font-size:11px;line-height:1.6;">
+              {make_bullets(macro_news, n=2, max_len=80)}
+            </ul>
           </div>
         </div>
         """, unsafe_allow_html=True)
@@ -606,11 +630,12 @@ def main():
         prices = load_prices()
         news = load_news()
         earnings = load_earnings()
+        fed_rate = load_fed_rate()
 
     render_header(now)
     render_market_snapshot(prices)
     st.markdown("<br>", unsafe_allow_html=True)
-    render_summary(prices, news)
+    render_summary(prices, news, fed_rate)
     render_news(news)
     st.markdown("<br>", unsafe_allow_html=True)
     render_earnings(earnings)
