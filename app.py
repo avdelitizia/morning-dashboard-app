@@ -423,10 +423,10 @@ def render_summary(prices, news, fed_rate=None):
           <span style="background:#6e7681;color:#fff;padding:2px 8px;border-radius:4px;
                        font-size:11px;font-weight:700;">MACRO</span>
           <div style="margin-top:10px;">
-            {rate_cell("Fed Rate", fed_rate, "%")}
-            {rate_cell("10-Yr Yield", tnx_val, "%")}
-            {rate_cell("3-Mo Yield", irx_val, "%")}
-            {rate_cell("US Dollar (DXY)", dxy_val)}
+            {rate_cell("Fed Funds Rate", fed_rate, "%")}
+            {rate_cell("10-Yr Treasury Yield", tnx_val, "%")}
+            {rate_cell("3-Mo Treasury Yield", irx_val, "%")}
+            {rate_cell("US Dollar Index (DXY)", dxy_val)}
           </div>
           <div style="border-top:1px solid #21262d;margin-top:8px;padding-top:6px;">
             <ul style="margin:0;padding-left:14px;color:#c9d1d9;font-size:11px;line-height:1.6;">
