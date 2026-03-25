@@ -551,15 +551,18 @@ def render_summary(prices, news, fed_rate=None):
         for a in other_items:
             label = article_label(a)
             sentiment, s_color, s_bg = article_sentiment(a["title"])
+            url = a.get("url", "#")
             rows += (
-                f'<div style="display:flex;align-items:baseline;gap:6px;'
-                f'padding:6px 0;border-bottom:1px solid #21262d;">'
+                f'<a href="{url}" target="_blank" rel="noopener noreferrer" '
+                f'style="display:flex;align-items:baseline;gap:6px;'
+                f'padding:6px 0;border-bottom:1px solid #21262d;'
+                f'text-decoration:none;cursor:pointer;">'
                 f'<span style="background:#30363d;color:#c9d1d9;padding:1px 6px;border-radius:4px;'
                 f'font-size:10px;font-weight:700;white-space:nowrap;">{label}</span>'
                 f'<span style="background:{s_bg};color:{s_color};padding:1px 6px;border-radius:4px;'
                 f'font-size:10px;font-weight:700;white-space:nowrap;">{sentiment}</span>'
                 f'<span style="color:#8b949e;font-size:12px;line-height:1.5;">{a["title"]}</span>'
-                f'</div>'
+                f'</a>'
             )
         st.markdown(f"""
         <div style="margin-top:16px;background:#161b22;border:1px solid #30363d;
