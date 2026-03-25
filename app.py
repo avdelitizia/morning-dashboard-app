@@ -55,6 +55,53 @@ AI_KEYWORDS = [
     "microsoft azure", "google cloud", "aws", "chip"
 ]
 
+COMPANY_NAMES = {
+    "NVDA": "Nvidia", "SOFI": "SoFi", "AMD": "AMD", "INTC": "Intel",
+    "AVGO": "Broadcom", "TSM": "TSMC", "MRVL": "Marvell", "HOOD": "Robinhood",
+    "LC": "LendingClub", "PYPL": "PayPal", "SQ": "Block", "NU": "Nubank",
+    "AFRM": "Affirm", "ALLY": "Ally Financial", "UPST": "Upstart",
+}
+
+SECTOR_MAP = {
+    "NVDA": "Semiconductors", "AMD": "Semiconductors", "INTC": "Semiconductors",
+    "AVGO": "Semiconductors", "TSM": "Semiconductors", "MRVL": "Semiconductors",
+    "SOFI": "Fintech", "HOOD": "Fintech", "LC": "Fintech", "PYPL": "Fintech",
+    "SQ": "Fintech", "NU": "Fintech", "AFRM": "Fintech", "ALLY": "Fintech",
+    "UPST": "Fintech",
+}
+
+BULLISH_WORDS = [
+    "beat", "beats", "surges", "surge", "record", "raises", "raised", "upgrade",
+    "upgraded", "growth", "profit", "strong", "outperform", "rally", "gains",
+    "gain", "rises", "rise", "jumps", "jump", "tops", "exceeds", "positive",
+    "buy", "bullish", "boosts", "boost", "expands", "expansion", "wins", "win",
+    "breakthrough", "higher", "increases", "increased", "milestone", "deal",
+]
+BEARISH_WORDS = [
+    "miss", "misses", "missed", "falls", "fall", "drops", "drop", "cut", "cuts",
+    "downgrade", "downgraded", "loss", "losses", "decline", "declines", "weak",
+    "sell", "bearish", "warning", "warns", "concern", "risk", "risks", "lawsuit",
+    "investigation", "recall", "layoffs", "lays off", "lower", "decreases",
+    "decreased", "slows", "slowdown", "disappoints", "disappointing", "plunges",
+    "plunge", "crashes", "crash", "fears", "trouble", "default", "tariff", "tariffs",
+]
+
+def article_sentiment(title):
+    t = title.lower()
+    bull = sum(1 for w in BULLISH_WORDS if w in t)
+    bear = sum(1 for w in BEARISH_WORDS if w in t)
+    if bull > bear:
+        return ("Bullish", "#3fb950", "#0d2818")
+    elif bear > bull:
+        return ("Bearish", "#f85149", "#2d0f0e")
+    return ("Neutral", "#8b949e", "#21262d")
+
+def article_label(article):
+    primary = article.get("primary", "")
+    name = COMPANY_NAMES.get(primary, "")
+    sector = SECTOR_MAP.get(primary, "Market")
+    return name if name else sector
+
 MACRO_KEYWORDS = [
     "federal reserve", "fed rate", "interest rate", "inflation", "cpi", "pce",
     "treasury yield", "bond yield", "recession", "gdp", "unemployment", "jobs report",
@@ -439,16 +486,27 @@ def render_summary(prices, news, fed_rate=None):
     # Also in the news
     other_items = news[5:20]
     if other_items:
-        bullets = "".join(f"<li>{a['title']}</li>" for a in other_items)
+        rows = ""
+        for a in other_items:
+            label = article_label(a)
+            sentiment, s_color, s_bg = article_sentiment(a["title"])
+            rows += (
+                f'<div style="display:flex;align-items:baseline;gap:6px;'
+                f'padding:6px 0;border-bottom:1px solid #21262d;">'
+                f'<span style="background:#30363d;color:#c9d1d9;padding:1px 6px;border-radius:4px;'
+                f'font-size:10px;font-weight:700;white-space:nowrap;">{label}</span>'
+                f'<span style="background:{s_bg};color:{s_color};padding:1px 6px;border-radius:4px;'
+                f'font-size:10px;font-weight:700;white-space:nowrap;">{sentiment}</span>'
+                f'<span style="color:#8b949e;font-size:12px;line-height:1.5;">{a["title"]}</span>'
+                f'</div>'
+            )
         st.markdown(f"""
         <div style="margin-top:16px;background:#161b22;border:1px solid #30363d;
-                    border-radius:8px;padding:16px 24px 20px;margin-bottom:24px;
+                    border-radius:8px;padding:16px 20px 8px;margin-bottom:24px;
                     font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <div style="color:#6e7681;font-size:11px;font-weight:700;letter-spacing:0.1em;
-                      margin-bottom:8px;">ALSO IN THE NEWS</div>
-          <ul style="margin:0;padding-left:18px;color:#8b949e;font-size:13px;line-height:1.8;">
-            {bullets}
-          </ul>
+                      margin-bottom:4px;">ALSO IN THE NEWS</div>
+          {rows}
         </div>
         """, unsafe_allow_html=True)
 
