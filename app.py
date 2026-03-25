@@ -368,7 +368,6 @@ def render_summary(prices, news, fed_rate=None):
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-size:20px;">⚡</span>
         <span style="color:#e6edf3;font-size:18px;font-weight:700;">Today's Summary</span>
-        <span style="color:#6e7681;font-size:13px;">Key data at a glance</span>
       </div>
     </div>
     """, unsafe_allow_html=True)
