@@ -70,6 +70,67 @@ SECTOR_MAP = {
     "UPST": "Fintech",
 }
 
+CREDIBLE_PUBLISHERS = [
+    "reuters", "bloomberg", "cnbc", "wall street journal", "wsj", "financial times",
+    "barron", "marketwatch", "seeking alpha", "the street", "motley fool", "benzinga",
+    "yahoo finance", "forbes", "business insider", "associated press", "ap news",
+    "investor's business daily", "ibd", "morningstar",
+]
+
+IMPACT_KEYWORDS = [
+    "earnings", "revenue", "guidance", "beats", "misses", "acquisition", "merger",
+    "analyst", "price target", "upgrade", "downgrade", "sec", "lawsuit", "settlement",
+    "partnership", "contract", "deal", "dividend", "buyback", "ipo", "ceo", "cfo",
+    "quarterly results", "annual results", "forecast", "outlook", "investigation",
+    "fda", "regulatory", "raised", "lowered", "record", "first quarter", "second quarter",
+    "third quarter", "fourth quarter", "q1", "q2", "q3", "q4", "full year",
+]
+
+COMPANY_NAME_KEYWORDS = {
+    "NVDA": ["nvidia", "nvda"],
+    "SOFI": ["sofi", "social finance"],
+    "AMD": ["amd", "advanced micro"],
+    "INTC": ["intel"],
+    "AVGO": ["broadcom"],
+    "TSM": ["tsmc", "taiwan semiconductor"],
+    "MRVL": ["marvell"],
+    "HOOD": ["robinhood"],
+    "LC": ["lendingclub", "lending club"],
+    "PYPL": ["paypal"],
+    "SQ": ["block", "square"],
+    "NU": ["nubank"],
+    "AFRM": ["affirm"],
+    "ALLY": ["ally"],
+    "UPST": ["upstart"],
+}
+
+def importance_score(article):
+    score = 0
+    title_lower = article["title"].lower()
+    publisher_lower = article.get("publisher", "").lower()
+
+    # Publisher credibility (+3)
+    if any(p in publisher_lower for p in CREDIBLE_PUBLISHERS):
+        score += 3
+
+    # High-impact keyword in title (+2 each, max +6)
+    hits = sum(1 for k in IMPACT_KEYWORDS if k in title_lower)
+    score += min(hits * 2, 6)
+
+    # Company name explicitly in title (+3)
+    primary = article.get("primary", "")
+    names = COMPANY_NAME_KEYWORDS.get(primary, [])
+    if any(n in title_lower for n in names):
+        score += 3
+
+    # Slight recency boost — newer articles within same score tier rank higher
+    # Normalize published timestamp to 0-1 range within 48h window
+    age_hours = (time.time() - article.get("published", 0)) / 3600
+    recency_boost = max(0, (48 - age_hours) / 48)
+    score += recency_boost
+
+    return score
+
 BULLISH_WORDS = [
     "beat", "beats", "surges", "surge", "record", "raises", "raised", "upgrade",
     "upgraded", "growth", "profit", "strong", "outperform", "rally", "gains",
@@ -254,7 +315,7 @@ def load_news():
         except Exception:
             pass
 
-    all_news.sort(key=lambda x: x["published"], reverse=True)
+    all_news.sort(key=importance_score, reverse=True)
 
     # Deduplicate by URL — merge tickers so cross-ticker articles are detected
     seen2 = {}
