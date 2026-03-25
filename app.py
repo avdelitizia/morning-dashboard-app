@@ -373,21 +373,21 @@ def render_summary(prices, news, fed_rate=None):
     </div>
     """, unsafe_allow_html=True)
 
-    # 4 boxes via st.columns
-    col1, col2, col3, col4 = st.columns(4)
+    # Row 1: NVDA + SOFI
+    col1, col2 = st.columns(2)
 
     with col1:
         st.markdown(f"""
-        <div style="background:#161b22;border:1px solid #30363d;border-left:1px solid #30363d;
-                    padding:14px;min-height:130px;
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+                    padding:16px;
                     font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
-          <span style="background:#76b900;color:#000;padding:2px 8px;border-radius:4px;
-                       font-size:11px;font-weight:700;">NVDA</span>
-          <div style="color:#e6edf3;font-size:20px;font-weight:700;margin:8px 0 2px;">
-            ${nvda_p.get("price", 0):,.2f}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="background:#76b900;color:#000;padding:2px 8px;border-radius:4px;
+                         font-size:11px;font-weight:700;">NVDA</span>
+            <span style="color:#e6edf3;font-size:18px;font-weight:700;">${nvda_p.get("price", 0):,.2f}</span>
+            {chg_span(nvda_p)}
           </div>
-          {chg_span(nvda_p)}
-          <ul style="margin:8px 0 0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.6;">
+          <ul style="margin:0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.7;">
             {make_bullets(nvda_news)}
           </ul>
         </div>
@@ -395,30 +395,35 @@ def render_summary(prices, news, fed_rate=None):
 
     with col2:
         st.markdown(f"""
-        <div style="background:#161b22;border:1px solid #30363d;
-                    padding:14px;min-height:130px;
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+                    padding:16px;
                     font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
-          <span style="background:#0a84ff;color:#fff;padding:2px 8px;border-radius:4px;
-                       font-size:11px;font-weight:700;">SOFI</span>
-          <div style="color:#e6edf3;font-size:20px;font-weight:700;margin:8px 0 2px;">
-            ${sofi_p.get("price", 0):,.2f}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="background:#0a84ff;color:#fff;padding:2px 8px;border-radius:4px;
+                         font-size:11px;font-weight:700;">SOFI</span>
+            <span style="color:#e6edf3;font-size:18px;font-weight:700;">${sofi_p.get("price", 0):,.2f}</span>
+            {chg_span(sofi_p)}
           </div>
-          {chg_span(sofi_p)}
-          <ul style="margin:8px 0 0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.6;">
+          <ul style="margin:0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.7;">
             {make_bullets(sofi_news)}
           </ul>
         </div>
         """, unsafe_allow_html=True)
 
+    st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
+
+    # Row 2: MACRO + AI CAPEX
+    col3, col4 = st.columns(2)
+
     with col3:
         def rate_cell(label, val, suffix=""):
             val_str = f"{val:.2f}{suffix}" if val is not None else "—"
-            return (f'<div style="display:flex;justify-content:space-between;padding:2px 0;">'
-                    f'<span style="color:#6e7681;font-size:11px;">{label}</span>'
-                    f'<span style="color:#e6edf3;font-weight:600;font-size:11px;">{val_str}</span></div>')
+            return (f'<div style="display:flex;justify-content:space-between;padding:3px 0;">'
+                    f'<span style="color:#6e7681;font-size:12px;">{label}</span>'
+                    f'<span style="color:#e6edf3;font-weight:600;font-size:12px;">{val_str}</span></div>')
         st.markdown(f"""
-        <div style="background:#161b22;border:1px solid #30363d;
-                    padding:14px;
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+                    padding:16px;
                     font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <span style="background:#6e7681;color:#fff;padding:2px 8px;border-radius:4px;
                        font-size:11px;font-weight:700;">MACRO</span>
@@ -428,9 +433,9 @@ def render_summary(prices, news, fed_rate=None):
             {rate_cell("3-Mo Treasury Yield", irx_val, "%")}
             {rate_cell("US Dollar Index (DXY)", dxy_val)}
           </div>
-          <div style="border-top:1px solid #21262d;margin-top:8px;padding-top:6px;">
-            <ul style="margin:0;padding-left:14px;color:#c9d1d9;font-size:11px;line-height:1.6;">
-              {make_bullets(macro_news, n=2, max_len=80)}
+          <div style="border-top:1px solid #21262d;margin-top:10px;padding-top:8px;">
+            <ul style="margin:0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.7;">
+              {make_bullets(macro_news, n=2, max_len=100)}
             </ul>
           </div>
         </div>
@@ -438,12 +443,12 @@ def render_summary(prices, news, fed_rate=None):
 
     with col4:
         st.markdown(f"""
-        <div style="background:#161b22;border:1px solid #30363d;border-right:1px solid #30363d;
-                    padding:14px;min-height:130px;
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+                    padding:16px;
                     font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <span style="background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:4px;
                        font-size:11px;font-weight:700;">AI CAPEX</span>
-          <ul style="margin:8px 0 0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.6;">
+          <ul style="margin:8px 0 0;padding-left:16px;color:#c9d1d9;font-size:12px;line-height:1.7;">
             {make_bullets(ai_news)}
           </ul>
         </div>
