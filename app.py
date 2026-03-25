@@ -1,7 +1,7 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 
 # ── Page Config ──────────────────────────────────────────────────────────────
@@ -582,7 +582,8 @@ def render_footer():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
-    now = datetime.now()
+    est = timezone(timedelta(hours=-4))  # EDT (UTC-4); becomes -5 in winter (EST)
+    now = datetime.now(est)
 
     # Refresh button top-right
     st.markdown('<div style="height:40px;"></div>', unsafe_allow_html=True)
