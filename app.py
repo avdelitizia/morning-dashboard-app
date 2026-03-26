@@ -115,6 +115,16 @@ COMPANY_NAME_KEYWORDS = {
 #   VERIFY = pattern-based for 2026 — please cross-check at the URLs above
 #
 ECONOMIC_CALENDAR = [
+    # ── FOMC Meeting Decision Dates (2nd day of each meeting) ──────────────────
+    # Source: federalreserve.gov/monetarypolicy/fomccalendars.htm
+    # * = press conference follows
+    {"date": "2026-04-29", "type": "FOMC", "label": "Fed Rate Decision",                    "confidence": "HIGH"},
+    {"date": "2026-06-17", "type": "FOMC", "label": "Fed Rate Decision + Press Conference", "confidence": "HIGH"},
+    {"date": "2026-07-29", "type": "FOMC", "label": "Fed Rate Decision",                    "confidence": "HIGH"},
+    {"date": "2026-09-16", "type": "FOMC", "label": "Fed Rate Decision + Press Conference", "confidence": "HIGH"},
+    {"date": "2026-10-28", "type": "FOMC", "label": "Fed Rate Decision",                    "confidence": "HIGH"},
+    {"date": "2026-12-09", "type": "FOMC", "label": "Fed Rate Decision + Press Conference", "confidence": "HIGH"},
+
     # ── CPI Release Dates (BLS, ~2nd Wednesday each month) ────────────────────
     # 2026 — HIGH confidence (BLS strict schedule), verify at bls.gov
     {"date": "2026-04-10", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
