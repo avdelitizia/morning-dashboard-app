@@ -657,24 +657,8 @@ def render_earnings(earnings_data):
         )
         return
 
-    # Table header
-    st.markdown("""
-    <div style="background:#161b22;border:1px solid #30363d;border-radius:8px 8px 0 0;
-                overflow:hidden;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead>
-          <tr style="background:#0d1117;border-bottom:1px solid #30363d;">
-            <th style="padding:10px 14px;text-align:left;color:#6e7681;font-weight:600;width:100px;">TICKER</th>
-            <th style="padding:10px 14px;text-align:left;color:#6e7681;font-weight:600;">DATE</th>
-            <th style="padding:10px 14px;text-align:left;color:#6e7681;font-weight:600;">EPS EST.</th>
-          </tr>
-        </thead>
-      </table>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # One row per entry
-    for i, e in enumerate(earnings_data):
+    rows = ""
+    for e in earnings_data:
         sym = e["ticker"]
         badge = ticker_badge(sym)
         try:
@@ -684,27 +668,32 @@ def render_earnings(earnings_data):
                 date_str = pd.Timestamp(e["date"]).strftime("%Y-%m-%d")
             except Exception:
                 date_str = str(e["date"])[:10]
-
         eps = e.get("eps_est")
         eps_str = f"${eps:.2f}" if eps is not None else "—"
         eps_color = "#3fb950" if eps and eps > 0 else "#8b949e"
-        radius = "border-radius:0 0 8px 8px;" if i == len(earnings_data) - 1 else ""
-        border_bottom = "" if i == len(earnings_data) - 1 else "border-bottom:1px solid #21262d;"
+        rows += f"""
+          <tr style="border-bottom:1px solid #21262d;">
+            <td style="padding:6px 12px;width:90px;">{badge}</td>
+            <td style="padding:6px 12px;color:#e6edf3;font-size:12px;">{date_str}</td>
+            <td style="padding:6px 12px;color:{eps_color};font-weight:600;font-size:12px;">{eps_str}</td>
+          </tr>"""
 
-        st.markdown(f"""
-        <div style="background:#161b22;border:1px solid #30363d;border-top:none;{radius}
-                    font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <tr style="{border_bottom}">
-              <td style="padding:10px 14px;width:100px;">{badge}</td>
-              <td style="padding:10px 14px;color:#e6edf3;">{date_str}</td>
-              <td style="padding:10px 14px;color:{eps_color};font-weight:600;">{eps_str}</td>
-            </tr>
-          </table>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+                overflow:hidden;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
+                margin-bottom:24px;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#0d1117;border-bottom:1px solid #30363d;">
+            <th style="padding:6px 12px;text-align:left;color:#6e7681;font-weight:600;font-size:11px;width:90px;">TICKER</th>
+            <th style="padding:6px 12px;text-align:left;color:#6e7681;font-weight:600;font-size:11px;">DATE</th>
+            <th style="padding:6px 12px;text-align:left;color:#6e7681;font-weight:600;font-size:11px;">EPS EST.</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def render_footer():
