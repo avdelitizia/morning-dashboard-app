@@ -104,6 +104,51 @@ COMPANY_NAME_KEYWORDS = {
     "UPST": ["upstart"],
 }
 
+# ── Economic Calendar ─────────────────────────────────────────────────────────
+# Sources:
+#   FOMC dates  → https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+#   CPI dates   → https://www.bls.gov/schedule/news_release/cpi.htm
+#   Jobs dates  → https://www.bls.gov/schedule/news_release/empsit.htm
+#
+# CONFIDENCE KEY:
+#   HIGH   = official source confirmed / strict formula (first Friday, 2nd Wednesday)
+#   VERIFY = pattern-based for 2026 — please cross-check at the URLs above
+#
+ECONOMIC_CALENDAR = [
+    # ── FOMC Meeting Decision Dates (2nd day of each meeting) ──────────────────
+    # 2026 — VERIFY all at federalreserve.gov
+    {"date": "2026-04-29", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
+    {"date": "2026-06-17", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
+    {"date": "2026-07-29", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
+    {"date": "2026-09-16", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
+    {"date": "2026-10-28", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
+    {"date": "2026-12-09", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
+
+    # ── CPI Release Dates (BLS, ~2nd Wednesday each month) ────────────────────
+    # 2026 — HIGH confidence (BLS strict schedule), verify at bls.gov
+    {"date": "2026-04-10", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+    {"date": "2026-05-13", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+    {"date": "2026-06-10", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+    {"date": "2026-07-15", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+    {"date": "2026-08-12", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+    {"date": "2026-09-09", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+    {"date": "2026-10-14", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+    {"date": "2026-11-12", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+    {"date": "2026-12-09", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
+
+    # ── Jobs Report / Employment Situation (BLS, 1st Friday each month) ───────
+    # 2026 — HIGH confidence (strict first-Friday rule)
+    {"date": "2026-04-03", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+    {"date": "2026-05-01", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+    {"date": "2026-06-05", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+    {"date": "2026-07-02", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+    {"date": "2026-08-07", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+    {"date": "2026-09-04", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+    {"date": "2026-10-02", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+    {"date": "2026-11-06", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+    {"date": "2026-12-04", "type": "JOBS",  "label": "Jobs Report",              "confidence": "HIGH"},
+]
+
 def importance_score(article):
     score = 0
     title_lower = article["title"].lower()
@@ -696,6 +741,77 @@ def render_earnings(earnings_data):
     """, unsafe_allow_html=True)
 
 
+def render_economic_calendar(now):
+    today = now.date()
+    upcoming = []
+    for e in ECONOMIC_CALENDAR:
+        d = datetime.strptime(e["date"], "%Y-%m-%d").date()
+        if d >= today:
+            days_away = (d - today).days
+            upcoming.append({**e, "days_away": days_away, "date_obj": d})
+    upcoming.sort(key=lambda x: x["date_obj"])
+    upcoming = upcoming[:12]  # show next 12 events
+
+    st.markdown("""
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;
+                padding-bottom:10px;border-bottom:1px solid #30363d;
+                font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+      <span style="font-size:20px;">🏛️</span>
+      <h2 style="margin:0;color:#e6edf3;font-size:18px;font-weight:700;">Economic Calendar</h2>
+      <span style="color:#6e7681;font-size:13px;">Upcoming events</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if not upcoming:
+        st.markdown('<div style="color:#6e7681;font-size:13px;padding:8px 0 24px;">No upcoming events.</div>', unsafe_allow_html=True)
+        return
+
+    TYPE_STYLES = {
+        "FOMC": ("background:#d97706;color:#000;", "Fed Meeting"),
+        "CPI":  ("background:#0a84ff;color:#fff;", "Inflation"),
+        "JOBS": ("background:#3fb950;color:#000;", "Employment"),
+    }
+
+    rows = ""
+    for e in upcoming:
+        badge_style, _ = TYPE_STYLES.get(e["type"], ("background:#30363d;color:#c9d1d9;", ""))
+        date_fmt = e["date_obj"].strftime("%b %d, %Y")
+        days = e["days_away"]
+        days_str = "Today" if days == 0 else f"In {days}d"
+        days_color = "#f85149" if days <= 3 else "#e6edf3" if days <= 14 else "#6e7681"
+        verify = ' <span style="color:#6e7681;font-size:10px;">*</span>' if e["confidence"] == "VERIFY" else ""
+        rows += f"""
+          <tr style="border-bottom:1px solid #21262d;">
+            <td style="padding:6px 12px;">
+              <span style="{badge_style}padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;">{e["type"]}</span>
+            </td>
+            <td style="padding:6px 12px;color:#e6edf3;font-size:12px;">{e["label"]}{verify}</td>
+            <td style="padding:6px 12px;color:#e6edf3;font-size:12px;">{date_fmt}</td>
+            <td style="padding:6px 12px;color:{days_color};font-size:12px;font-weight:600;text-align:right;">{days_str}</td>
+          </tr>"""
+
+    st.markdown(f"""
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;
+                overflow:hidden;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
+                margin-bottom:8px;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#0d1117;border-bottom:1px solid #30363d;">
+            <th style="padding:6px 12px;text-align:left;color:#6e7681;font-weight:600;font-size:11px;width:70px;">TYPE</th>
+            <th style="padding:6px 12px;text-align:left;color:#6e7681;font-weight:600;font-size:11px;">EVENT</th>
+            <th style="padding:6px 12px;text-align:left;color:#6e7681;font-weight:600;font-size:11px;">DATE</th>
+            <th style="padding:6px 12px;text-align:right;color:#6e7681;font-weight:600;font-size:11px;">COUNTDOWN</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
+    </div>
+    <div style="color:#6e7681;font-size:10px;margin-bottom:24px;font-family:system-ui;">
+      * FOMC dates are pattern-based for 2026 — verify at federalreserve.gov/monetarypolicy/fomccalendars.htm
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def render_footer():
     st.markdown("""
     <div style="border-top:1px solid #21262d;padding-top:16px;text-align:center;margin-top:8px;
@@ -735,6 +851,7 @@ def main():
     render_news(news)
     st.markdown("<br>", unsafe_allow_html=True)
     render_earnings(earnings)
+    render_economic_calendar(now)
     render_footer()
 
 
