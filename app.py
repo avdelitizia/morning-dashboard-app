@@ -115,15 +115,6 @@ COMPANY_NAME_KEYWORDS = {
 #   VERIFY = pattern-based for 2026 — please cross-check at the URLs above
 #
 ECONOMIC_CALENDAR = [
-    # ── FOMC Meeting Decision Dates (2nd day of each meeting) ──────────────────
-    # 2026 — VERIFY all at federalreserve.gov
-    {"date": "2026-04-29", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
-    {"date": "2026-06-17", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
-    {"date": "2026-07-29", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
-    {"date": "2026-09-16", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
-    {"date": "2026-10-28", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
-    {"date": "2026-12-09", "type": "FOMC",  "label": "Fed Rate Decision",        "confidence": "VERIFY"},
-
     # ── CPI Release Dates (BLS, ~2nd Wednesday each month) ────────────────────
     # 2026 — HIGH confidence (BLS strict schedule), verify at bls.gov
     {"date": "2026-04-10", "type": "CPI",   "label": "CPI Inflation Report",     "confidence": "HIGH"},
@@ -779,7 +770,7 @@ def render_economic_calendar(now):
         days = e["days_away"]
         days_str = "Today" if days == 0 else f"In {days}d"
         days_color = "#f85149" if days <= 3 else "#e6edf3" if days <= 14 else "#6e7681"
-        verify = ' <span style="color:#6e7681;font-size:10px;">*</span>' if e["confidence"] == "VERIFY" else ""
+        verify = ""
         rows += f"""
           <tr style="border-bottom:1px solid #21262d;">
             <td style="padding:6px 12px;">
@@ -806,9 +797,7 @@ def render_economic_calendar(now):
         <tbody>{rows}</tbody>
       </table>
     </div>
-    <div style="color:#6e7681;font-size:10px;margin-bottom:24px;font-family:system-ui;">
-      * FOMC dates are pattern-based for 2026 — verify at federalreserve.gov/monetarypolicy/fomccalendars.htm
-    </div>
+    <div style="margin-bottom:24px;"></div>
     """, unsafe_allow_html=True)
 
 
