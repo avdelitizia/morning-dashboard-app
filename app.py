@@ -610,7 +610,9 @@ def render_summary(prices, news, fed_rate=None):
                 f'font-size:10px;font-weight:700;white-space:nowrap;">{label}</span>'
                 f'<span style="background:{s_bg};color:{s_color};padding:1px 6px;border-radius:4px;'
                 f'font-size:10px;font-weight:700;white-space:nowrap;">{sentiment}</span>'
-                f'<span style="color:#8b949e;font-size:12px;line-height:1.5;">{a["title"]}</span>'
+                f'<span style="color:#8b949e;font-size:12px;line-height:1.5;flex:1;">{a["title"]}</span>'
+                f'<span style="color:#58a6ff;font-size:12px;font-weight:600;white-space:nowrap;'
+                f'padding:4px 8px;border:1px solid #58a6ff;border-radius:4px;margin-left:8px;">Read →</span>'
                 f'</a>'
             )
         st.markdown(f"""
