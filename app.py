@@ -25,18 +25,21 @@ section[data-testid="stSidebar"] { background-color: #161b22; }
 [data-testid="stToolbar"] { display: none; }
 .stSpinner > div { color: #58a6ff; }
 .stButton > button {
-    background-color: #21262d;
-    color: #c9d1d9;
-    border: 1px solid #30363d;
+    background-color: #161b22;
+    color: #58a6ff;
+    border: 1px solid #58a6ff;
     border-radius: 6px;
-    padding: 6px 16px;
-    font-size: 13px;
+    padding: 6px 18px;
+    font-size: 12px;
+    font-weight: 600;
     font-family: system-ui, -apple-system, sans-serif;
+    letter-spacing: 0.04em;
+    transition: all 0.15s ease;
 }
 .stButton > button:hover {
-    background-color: #30363d;
+    background-color: #58a6ff;
+    color: #0d1117;
     border-color: #58a6ff;
-    color: #58a6ff;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -833,7 +836,7 @@ def main():
     st.markdown('<div style="height:40px;"></div>', unsafe_allow_html=True)
     _, btn_col = st.columns([6, 2])
     with btn_col:
-        if st.button("🔄 Refresh", use_container_width=True):
+        if st.button("↻  Refresh Data", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
 
